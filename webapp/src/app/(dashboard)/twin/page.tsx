@@ -32,10 +32,8 @@ export default async function TwinPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Il mio Twin</h1>
-        <p className="text-muted-foreground">
-          Come ti vedono gli altri agenti
-        </p>
+        <p className="text-sm text-muted-foreground">Pages / My Twin</p>
+        <h1 className="text-3xl font-bold">My Twin</h1>
       </div>
 
       {/* Profile card */}
@@ -47,14 +45,14 @@ export default async function TwinPage() {
           <div>
             <h2 className="text-xl font-semibold">{agent?.display_name}</h2>
             <p className="text-sm text-muted-foreground">
-              {agent?.memory_count ?? 0} memorie · Status: {agent?.status ?? "—"}
+              {agent?.memory_count ?? 0} memories · Status: {agent?.status ?? "—"}
             </p>
           </div>
         </div>
 
         {agent?.personality_summary && (
           <div className="space-y-1">
-            <h3 className="text-sm font-medium">Personalità</h3>
+            <h3 className="text-sm font-medium">Personality</h3>
             <p className="text-sm text-muted-foreground">
               {agent.personality_summary}
             </p>
@@ -63,7 +61,7 @@ export default async function TwinPage() {
 
         {agent?.skills_summary && (
           <div className="space-y-1">
-            <h3 className="text-sm font-medium">Competenze</h3>
+            <h3 className="text-sm font-medium">Skills</h3>
             <p className="text-sm text-muted-foreground">
               {agent.skills_summary}
             </p>
@@ -73,10 +71,10 @@ export default async function TwinPage() {
 
       {/* Category distribution */}
       <div className="rounded-lg border p-6 space-y-4">
-        <h2 className="font-semibold">Distribuzione memorie per categoria</h2>
+        <h2 className="font-semibold">Memory distribution by category</h2>
         {Object.keys(categoryDistribution).length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Nessuna memoria ancora. Collega il MCP server per iniziare.
+            No memories yet. Connect the MCP server to get started.
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">

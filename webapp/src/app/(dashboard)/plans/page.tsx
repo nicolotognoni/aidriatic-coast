@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 
 interface Plan {
   readonly id: string;
@@ -13,9 +14,9 @@ interface Plan {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  draft: "Bozza",
-  active: "Attivo",
-  completed: "Completato",
+  draft: "Draft",
+  active: "Active",
+  completed: "Completed",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -25,7 +26,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("it-IT", {
+  return new Date(dateStr).toLocaleDateString("en-US", {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -33,44 +34,30 @@ function formatDate(dateStr: string): string {
 }
 
 export default function PlansPage() {
-  const [plans, setPlans] = useState<readonly Plan[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchPlans = useCallback(async () => {
-    const res = await fetch("/api/plans");
-    const json = await res.json();
-    setPlans(json.data ?? []);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    fetchPlans();
-  }, [fetchPlans]);
-
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <h1 className="text-2xl font-bold">Piani</h1>
-        <p className="text-muted-foreground">Caricamento...</p>
-      </div>
-    );
-  }
+  const { data, isLoading } = useSWR<{ data: Plan[] }>(
+    "/api/plans",
+    fetcher
+  );
+  const plans: readonly Plan[] = data?.data ?? [];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Piani</h1>
-        <p className="text-muted-foreground">
-          Piani collaborativi creati con i tuoi agenti
+        <p className="text-sm text-muted-foreground">Pages / Plans</p>
+        <h1 className="text-3xl font-bold">Plans</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Collaborative plans created with your agents
         </p>
       </div>
 
-      {plans.length === 0 ? (
+      {isLoading ? (
+        <p className="text-muted-foreground">Loading...</p>
+      ) : plans.length === 0 ? (
         <div className="rounded-lg border border-dashed p-8 text-center space-y-2">
-          <h3 className="font-medium">Nessun piano ancora</h3>
+          <h3 className="font-medium">No plans yet</h3>
           <p className="text-sm text-muted-foreground">
-            Crea un piano in ChatGPT con il team di agenti. I piani verranno
-            salvati automaticamente e mostrati qui.
+            Create a plan in ChatGPT with the agent team. Plans will be saved
+            automatically and shown here.
           </p>
         </div>
       ) : (
@@ -96,10 +83,10 @@ export default function PlansPage() {
               </div>
 
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span>{plan.agent_ids.length} agenti</span>
-                <span>Creato il {formatDate(plan.created_at)}</span>
+                <span>{plan.agent_ids.length} agents</span>
+                <span>Created {formatDate(plan.created_at)}</span>
                 {plan.updated_at !== plan.created_at && (
-                  <span>Aggiornato il {formatDate(plan.updated_at)}</span>
+                  <span>Updated {formatDate(plan.updated_at)}</span>
                 )}
               </div>
             </div>

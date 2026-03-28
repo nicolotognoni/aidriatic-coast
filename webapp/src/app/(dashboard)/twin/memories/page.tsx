@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import type { Memory, MemoryCategory } from "@/types";
 
 const CATEGORIES: readonly MemoryCategory[] = [
@@ -17,25 +18,17 @@ const CATEGORIES: readonly MemoryCategory[] = [
 ] as const;
 
 export default function MemoriesPage() {
-  const [memories, setMemories] = useState<readonly Memory[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, mutate } = useSWR<{ data: Memory[] }>(
+    "/api/memories",
+    fetcher
+  );
+  const memories: readonly Memory[] = data?.data ?? [];
+
   const [filter, setFilter] = useState<MemoryCategory | "all">("all");
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<readonly Memory[] | null>(null);
   const [searching, setSearching] = useState(false);
-
-  const fetchMemories = useCallback(async () => {
-    setLoading(true);
-    const res = await fetch("/api/memories");
-    const { data } = await res.json();
-    setMemories(data ?? []);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    fetchMemories();
-  }, [fetchMemories]);
 
   const filteredMemories =
     filter === "all"
@@ -48,16 +41,12 @@ export default function MemoriesPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_active: !currentActive }),
     });
-    setMemories(
-      memories.map((m) =>
-        m.id === id ? { ...m, is_active: !currentActive } : m
-      )
-    );
+    mutate();
   }
 
   async function handleDelete(id: string) {
     await fetch(`/api/memories/${id}`, { method: "DELETE" });
-    setMemories(memories.filter((m) => m.id !== id));
+    mutate();
   }
 
   async function handleSearch(e: React.FormEvent) {
@@ -88,25 +77,26 @@ export default function MemoriesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Memorie</h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">Pages / Memories</p>
+          <h1 className="text-3xl font-bold">Memories</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             {searchResults
-              ? `${searchResults.length} risultati per "${searchQuery}"`
-              : `${memories.length} memorie totali`}
+              ? `${searchResults.length} results for "${searchQuery}"`
+              : `${memories.length} total memories`}
           </p>
         </div>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90"
+          className="inline-flex h-9 items-center rounded-lg bg-foreground px-4 text-sm font-medium text-background shadow hover:bg-foreground/90 transition-colors"
         >
-          {showAddForm ? "Chiudi" : "Aggiungi memoria"}
+          {showAddForm ? "Close" : "Add memory"}
         </button>
       </div>
 
       {showAddForm && (
         <AddMemoryForm
           onAdded={() => {
-            fetchMemories();
+            mutate();
             setShowAddForm(false);
           }}
         />
@@ -118,23 +108,23 @@ export default function MemoriesPage() {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Cerca nelle memorie (ricerca semantica)..."
-          className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          placeholder="Search memories (semantic search)..."
+          className="flex h-10 flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
         <button
           type="submit"
           disabled={searching || !searchQuery.trim()}
-          className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-50"
+          className="inline-flex h-10 items-center rounded-lg bg-foreground px-4 text-sm font-medium text-background shadow hover:bg-foreground/90 disabled:opacity-50 transition-colors"
         >
-          {searching ? "..." : "Cerca"}
+          {searching ? "..." : "Search"}
         </button>
         {searchResults && (
           <button
             type="button"
             onClick={clearSearch}
-            className="inline-flex h-10 items-center rounded-md border px-3 text-sm font-medium hover:bg-muted"
+            className="inline-flex h-10 items-center rounded-lg border px-3 text-sm font-medium hover:bg-muted transition-colors"
           >
-            Mostra tutte
+            Show all
           </button>
         )}
       </form>
@@ -145,7 +135,7 @@ export default function MemoriesPage() {
           active={filter === "all"}
           onClick={() => setFilter("all")}
         >
-          Tutte
+          All
         </FilterButton>
         {CATEGORIES.map((cat) => (
           <FilterButton
@@ -159,14 +149,14 @@ export default function MemoriesPage() {
       </div>
 
       {/* Memory list */}
-      {loading ? (
-        <p className="text-muted-foreground">Caricamento...</p>
+      {isLoading ? (
+        <p className="text-muted-foreground">Loading...</p>
       ) : displayMemories.length === 0 ? (
         <div className="rounded-lg border border-dashed p-8 text-center">
           <p className="text-muted-foreground">
             {filter === "all"
-              ? "Nessuna memoria. Aggiungi la prima o collega il MCP server."
-              : `Nessuna memoria nella categoria "${filter}".`}
+              ? "No memories. Add your first one or connect the MCP server."
+              : `No memories in the "${filter}" category.`}
           </p>
         </div>
       ) : (
@@ -196,15 +186,15 @@ export default function MemoriesPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleToggle(memory.id, memory.is_active)}
-                    className="text-xs text-muted-foreground hover:text-foreground"
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    {memory.is_active ? "Disattiva" : "Attiva"}
+                    {memory.is_active ? "Deactivate" : "Activate"}
                   </button>
                   <button
                     onClick={() => handleDelete(memory.id)}
-                    className="text-xs text-destructive hover:text-destructive/80"
+                    className="text-xs text-destructive hover:text-destructive/80 transition-colors"
                   >
-                    Elimina
+                    Delete
                   </button>
                 </div>
               </div>
@@ -230,7 +220,7 @@ function FilterButton({
       onClick={onClick}
       className={`inline-flex rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
         active
-          ? "bg-primary text-primary-foreground"
+          ? "bg-foreground text-background"
           : "bg-muted text-muted-foreground hover:bg-muted/80"
       }`}
     >
@@ -267,15 +257,15 @@ function AddMemoryForm({ onAdded }: { onAdded: () => void }) {
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder="Scrivi una memoria... (es. 'Preferisco TypeScript a JavaScript per progetti grandi')"
+        placeholder="Write a memory... (e.g. 'I prefer TypeScript over JavaScript for large projects')"
         rows={3}
-        className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
       <div className="flex items-center gap-3">
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value as MemoryCategory)}
-          className="flex h-9 rounded-md border border-input bg-background px-3 text-sm"
+          className="flex h-9 rounded-lg border border-input bg-background px-3 text-sm"
         >
           {CATEGORIES.map((cat) => (
             <option key={cat} value={cat}>
@@ -286,9 +276,9 @@ function AddMemoryForm({ onAdded }: { onAdded: () => void }) {
         <button
           type="submit"
           disabled={saving || !content.trim()}
-          className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-50"
+          className="inline-flex h-9 items-center rounded-lg bg-foreground px-4 text-sm font-medium text-background shadow hover:bg-foreground/90 disabled:opacity-50 transition-colors"
         >
-          {saving ? "Salvataggio..." : "Salva"}
+          {saving ? "Saving..." : "Save"}
         </button>
       </div>
     </form>

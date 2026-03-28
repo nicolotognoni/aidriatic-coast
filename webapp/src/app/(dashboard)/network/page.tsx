@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 
 interface UserResult {
   readonly id: string;
@@ -19,22 +21,15 @@ interface ConnectionData {
 }
 
 export default function NetworkPage() {
+  const { data, isLoading, mutate } = useSWR<{ data: ConnectionData[] }>(
+    "/api/connections",
+    fetcher
+  );
+  const connections: readonly ConnectionData[] = data?.data ?? [];
+
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<readonly UserResult[]>([]);
-  const [connections, setConnections] = useState<readonly ConnectionData[]>([]);
   const [searching, setSearching] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  const fetchConnections = useCallback(async () => {
-    const res = await fetch("/api/connections");
-    const { data } = await res.json();
-    setConnections(data ?? []);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    fetchConnections();
-  }, [fetchConnections]);
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -44,8 +39,8 @@ export default function NetworkPage() {
     const res = await fetch(
       `/api/users/search?q=${encodeURIComponent(searchQuery.trim())}`
     );
-    const { data } = await res.json();
-    setSearchResults(data ?? []);
+    const { data: results } = await res.json();
+    setSearchResults(results ?? []);
     setSearching(false);
   }
 
@@ -56,7 +51,7 @@ export default function NetworkPage() {
       body: JSON.stringify({ receiver_id: userId }),
     });
     setSearchResults(searchResults.filter((u) => u.id !== userId));
-    fetchConnections();
+    mutate();
   }
 
   const acceptedConnections = connections.filter(
@@ -66,9 +61,10 @@ export default function NetworkPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Network</h1>
-        <p className="text-muted-foreground">
-          Cerca utenti e gestisci le tue connessioni
+        <p className="text-sm text-muted-foreground">Pages / Network</p>
+        <h1 className="text-3xl font-bold">Network</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Search users and manage your connections
         </p>
       </div>
 
@@ -78,22 +74,22 @@ export default function NetworkPage() {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Cerca per nome o email..."
-          className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          placeholder="Search by name or email..."
+          className="flex h-10 flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
         <button
           type="submit"
           disabled={searching || searchQuery.trim().length < 2}
-          className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-50"
+          className="inline-flex h-10 items-center rounded-lg bg-foreground px-4 text-sm font-medium text-background shadow hover:bg-foreground/90 disabled:opacity-50 transition-colors"
         >
-          {searching ? "..." : "Cerca"}
+          {searching ? "..." : "Search"}
         </button>
       </form>
 
       {/* Search results */}
       {searchResults.length > 0 && (
         <div className="space-y-3">
-          <h2 className="font-semibold">Risultati ricerca</h2>
+          <h2 className="font-semibold">Search results</h2>
           {searchResults.map((user) => (
             <div
               key={user.id}
@@ -112,9 +108,9 @@ export default function NetworkPage() {
               </div>
               <button
                 onClick={() => handleConnect(user.id)}
-                className="inline-flex h-8 items-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground shadow hover:bg-primary/90"
+                className="inline-flex h-8 items-center rounded-lg bg-foreground px-3 text-xs font-medium text-background shadow hover:bg-foreground/90 transition-colors"
               >
-                Connetti
+                Connect
               </button>
             </div>
           ))}
@@ -124,14 +120,14 @@ export default function NetworkPage() {
       {/* Connected users */}
       <div className="space-y-3">
         <h2 className="font-semibold">
-          Connessioni ({acceptedConnections.length})
+          Connections ({acceptedConnections.length})
         </h2>
-        {loading ? (
-          <p className="text-muted-foreground">Caricamento...</p>
+        {isLoading ? (
+          <p className="text-muted-foreground">Loading...</p>
         ) : acceptedConnections.length === 0 ? (
           <div className="rounded-lg border border-dashed p-8 text-center">
             <p className="text-muted-foreground">
-              Nessuna connessione ancora. Cerca utenti per iniziare.
+              No connections yet. Search for users to get started.
             </p>
           </div>
         ) : (
@@ -157,7 +153,7 @@ export default function NetworkPage() {
                   )}
                 </div>
                 <span className="ml-auto text-xs text-green-600 font-medium">
-                  Connesso
+                  Connected
                 </span>
               </div>
             );

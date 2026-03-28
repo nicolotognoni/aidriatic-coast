@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 
 interface Notification {
   readonly id: string;
@@ -23,30 +23,20 @@ const TYPE_ICONS: Record<string, string> = {
 function timeAgo(dateStr: string): string {
   const diffMs = Date.now() - new Date(dateStr).getTime();
   const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return "ora";
-  if (minutes < 60) return `${minutes} min fa`;
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} or${hours === 1 ? "a" : "e"} fa`;
+  if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
-  return `${days} giorn${days === 1 ? "o" : "i"} fa`;
+  return `${days}d ago`;
 }
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<readonly Notification[]>(
-    []
+  const { data, isLoading, mutate } = useSWR<{ data: Notification[] }>(
+    "/api/notifications",
+    fetcher
   );
-  const [loading, setLoading] = useState(true);
-
-  const fetchNotifications = useCallback(async () => {
-    const res = await fetch("/api/notifications");
-    const json = await res.json();
-    setNotifications(json.data ?? []);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+  const notifications: readonly Notification[] = data?.data ?? [];
 
   const markAsRead = async (notificationId: string) => {
     await fetch("/api/notifications", {
@@ -54,7 +44,7 @@ export default function NotificationsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ notification_id: notificationId }),
     });
-    fetchNotifications();
+    mutate();
   };
 
   const markAllRead = async () => {
@@ -63,29 +53,23 @@ export default function NotificationsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ mark_all_read: true }),
     });
-    fetchNotifications();
+    mutate();
   };
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
-
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <h1 className="text-2xl font-bold">Notifiche</h1>
-        <p className="text-muted-foreground">Caricamento...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Notifiche</h1>
-          <p className="text-muted-foreground">
-            {unreadCount > 0
-              ? `${unreadCount} non lett${unreadCount === 1 ? "a" : "e"}`
-              : "Tutto letto"}
+          <p className="text-sm text-muted-foreground">Pages / Notifications</p>
+          <h1 className="text-3xl font-bold">Notifications</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isLoading
+              ? "Loading..."
+              : unreadCount > 0
+                ? `${unreadCount} unread`
+                : "All caught up"}
           </p>
         </div>
         {unreadCount > 0 && (
@@ -93,17 +77,19 @@ export default function NotificationsPage() {
             onClick={markAllRead}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            Segna tutte come lette
+            Mark all as read
           </button>
         )}
       </div>
 
-      {notifications.length === 0 ? (
+      {isLoading ? (
+        <p className="text-muted-foreground">Loading...</p>
+      ) : notifications.length === 0 ? (
         <div className="rounded-lg border border-dashed p-8 text-center space-y-2">
-          <h3 className="font-medium">Nessuna notifica</h3>
+          <h3 className="font-medium">No notifications</h3>
           <p className="text-sm text-muted-foreground">
-            Le notifiche appariranno quando qualcuno interagisce con il tuo Twin
-            o ti invia una richiesta di connessione.
+            Notifications will appear when someone interacts with your Twin or
+            sends you a connection request.
           </p>
         </div>
       ) : (
@@ -132,9 +118,9 @@ export default function NotificationsPage() {
               {!n.is_read && (
                 <button
                   onClick={() => markAsRead(n.id)}
-                  className="text-xs text-muted-foreground hover:text-foreground shrink-0"
+                  className="text-xs text-muted-foreground hover:text-foreground shrink-0 transition-colors"
                 >
-                  Letta
+                  Read
                 </button>
               )}
             </div>

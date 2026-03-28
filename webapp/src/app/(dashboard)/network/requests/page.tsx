@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 
 interface ConnectionRequest {
   readonly id: string;
@@ -21,27 +22,18 @@ interface ConnectionRequest {
 }
 
 export default function RequestsPage() {
-  const [connections, setConnections] = useState<readonly ConnectionRequest[]>(
-    []
+  const { data: connData, isLoading: connLoading, mutate } = useSWR<{ data: ConnectionRequest[] }>(
+    "/api/connections",
+    fetcher
   );
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: userData, isLoading: userLoading } = useSWR<{ user: { id: string } }>(
+    "/api/auth/me",
+    fetcher
+  );
 
-  const fetchData = useCallback(async () => {
-    const [connRes, userRes] = await Promise.all([
-      fetch("/api/connections"),
-      fetch("/api/auth/me"),
-    ]);
-    const { data: connData } = await connRes.json();
-    const { user } = await userRes.json();
-    setConnections(connData ?? []);
-    setCurrentUserId(user?.id ?? null);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  const connections: readonly ConnectionRequest[] = connData?.data ?? [];
+  const currentUserId = userData?.user?.id ?? null;
+  const loading = connLoading || userLoading;
 
   async function handleAction(id: string, status: "accepted" | "rejected") {
     await fetch(`/api/connections/${id}`, {
@@ -49,12 +41,12 @@ export default function RequestsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
-    fetchData();
+    mutate();
   }
 
   async function handleCancel(id: string) {
     await fetch(`/api/connections/${id}`, { method: "DELETE" });
-    fetchData();
+    mutate();
   }
 
   const incoming = connections.filter(
@@ -64,96 +56,99 @@ export default function RequestsPage() {
     (c) => c.requester_id === currentUserId && c.status === "pending"
   );
 
-  if (loading) {
-    return <p className="text-muted-foreground">Caricamento...</p>;
-  }
-
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Richieste di connessione</h1>
-        <p className="text-muted-foreground">
-          Gestisci le richieste in entrata e in uscita
+        <p className="text-sm text-muted-foreground">Pages / Requests</p>
+        <h1 className="text-3xl font-bold">Connection Requests</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Manage incoming and outgoing requests
         </p>
       </div>
 
-      {/* Incoming */}
-      <div className="space-y-3">
-        <h2 className="font-semibold">In entrata ({incoming.length})</h2>
-        {incoming.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Nessuna richiesta in sospeso.
-          </p>
-        ) : (
-          incoming.map((req) => (
-            <div
-              key={req.id}
-              className="flex items-center justify-between rounded-lg border p-4"
-            >
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold">
-                  {req.requester.display_name.charAt(0)}
-                </div>
-                <div>
-                  <p className="font-medium">{req.requester.display_name}</p>
-                  {req.requester.bio && (
-                    <p className="text-xs text-muted-foreground">
-                      {req.requester.bio}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleAction(req.id, "accepted")}
-                  className="inline-flex h-8 items-center rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+      {loading ? (
+        <p className="text-muted-foreground">Loading...</p>
+      ) : (
+        <>
+          {/* Incoming */}
+          <div className="space-y-3">
+            <h2 className="font-semibold">Incoming ({incoming.length})</h2>
+            {incoming.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No pending requests.
+              </p>
+            ) : (
+              incoming.map((req) => (
+                <div
+                  key={req.id}
+                  className="flex items-center justify-between rounded-lg border p-4"
                 >
-                  Accetta
-                </button>
-                <button
-                  onClick={() => handleAction(req.id, "rejected")}
-                  className="inline-flex h-8 items-center rounded-md border px-3 text-xs font-medium hover:bg-muted"
-                >
-                  Rifiuta
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold">
+                      {req.requester.display_name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-medium">{req.requester.display_name}</p>
+                      {req.requester.bio && (
+                        <p className="text-xs text-muted-foreground">
+                          {req.requester.bio}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleAction(req.id, "accepted")}
+                      className="inline-flex h-8 items-center rounded-lg bg-foreground px-3 text-xs font-medium text-background hover:bg-foreground/90 transition-colors"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => handleAction(req.id, "rejected")}
+                      className="inline-flex h-8 items-center rounded-lg border px-3 text-xs font-medium hover:bg-muted transition-colors"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
 
-      {/* Outgoing */}
-      <div className="space-y-3">
-        <h2 className="font-semibold">In uscita ({outgoing.length})</h2>
-        {outgoing.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Nessuna richiesta inviata.
-          </p>
-        ) : (
-          outgoing.map((req) => (
-            <div
-              key={req.id}
-              className="flex items-center justify-between rounded-lg border p-4"
-            >
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold">
-                  {req.receiver.display_name.charAt(0)}
+          {/* Outgoing */}
+          <div className="space-y-3">
+            <h2 className="font-semibold">Outgoing ({outgoing.length})</h2>
+            {outgoing.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No sent requests.
+              </p>
+            ) : (
+              outgoing.map((req) => (
+                <div
+                  key={req.id}
+                  className="flex items-center justify-between rounded-lg border p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold">
+                      {req.receiver.display_name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-medium">{req.receiver.display_name}</p>
+                      <p className="text-xs text-muted-foreground">Pending...</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleCancel(req.id)}
+                    className="inline-flex h-8 items-center rounded-lg border px-3 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    Cancel
+                  </button>
                 </div>
-                <div>
-                  <p className="font-medium">{req.receiver.display_name}</p>
-                  <p className="text-xs text-muted-foreground">In attesa...</p>
-                </div>
-              </div>
-              <button
-                onClick={() => handleCancel(req.id)}
-                className="inline-flex h-8 items-center rounded-md border px-3 text-xs font-medium text-destructive hover:bg-destructive/10"
-              >
-                Annulla
-              </button>
-            </div>
-          ))
-        )}
-      </div>
+              ))
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { Brain, Users, Activity } from "lucide-react";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -34,35 +35,36 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Panoramica del tuo Digital Twin
-        </p>
+        <p className="text-sm text-muted-foreground">Pages / Main Dashboard</p>
+        <h1 className="text-3xl font-bold">Main Dashboard</h1>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard
-          title="Memorie"
+          icon={<Brain size={20} />}
+          title="Memories"
           value={memoryCount}
-          description="memorie attive"
+          description="active memories"
         />
         <StatCard
-          title="Connessioni"
+          icon={<Users size={20} />}
+          title="Connections"
           value={connectionCount}
-          description="utenti connessi"
+          description="connected users"
         />
         <StatCard
+          icon={<Activity size={20} />}
           title="Status"
           value={agent?.status ?? "—"}
-          description={agent?.display_name ?? "Twin non configurato"}
+          description={agent?.display_name ?? "Twin not configured"}
         />
       </div>
 
       {/* Twin summary */}
       {agent?.personality_summary && (
         <div className="rounded-lg border p-6 space-y-2">
-          <h2 className="font-semibold">Profilo Twin</h2>
+          <h2 className="font-semibold">Twin Profile</h2>
           <p className="text-sm text-muted-foreground">
             {agent.personality_summary}
           </p>
@@ -72,21 +74,20 @@ export default async function DashboardPage() {
       {/* Empty state */}
       {memoryCount === 0 && (
         <div className="rounded-lg border border-dashed p-8 text-center space-y-2">
-          <h3 className="font-medium">Nessuna memoria ancora</h3>
+          <h3 className="font-medium">No memories yet</h3>
           <p className="text-sm text-muted-foreground">
-            Collega il MCP server a ChatGPT per iniziare a raccogliere memorie
-            automaticamente, oppure aggiungile manualmente dalla pagina Memorie.
+            Connect the MCP server to ChatGPT to start collecting memories
+            automatically, or add them manually from the Memories page.
           </p>
         </div>
       )}
 
       {connectionCount === 0 && memoryCount > 0 && (
         <div className="rounded-lg border border-dashed p-8 text-center space-y-2">
-          <h3 className="font-medium">Nessuna connessione</h3>
+          <h3 className="font-medium">No connections</h3>
           <p className="text-sm text-muted-foreground">
-            Vai nella sezione Network per cercare altri utenti e inviare
-            richieste di connessione. Una volta connessi, i vostri Twin
-            potranno comunicare.
+            Go to the Network section to find other users and send connection
+            requests. Once connected, your Twins will be able to communicate.
           </p>
         </div>
       )}
@@ -95,19 +96,26 @@ export default async function DashboardPage() {
 }
 
 function StatCard({
+  icon,
   title,
   value,
   description,
 }: {
+  icon: React.ReactNode;
   title: string;
   value: string | number;
   description: string;
 }) {
   return (
-    <div className="rounded-lg border p-4 space-y-1">
-      <p className="text-sm text-muted-foreground">{title}</p>
-      <p className="text-2xl font-bold">{value}</p>
-      <p className="text-xs text-muted-foreground">{description}</p>
+    <div className="rounded-lg border p-5 space-y-3">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+        {icon}
+      </div>
+      <div>
+        <p className="text-sm text-muted-foreground">{title}</p>
+        <p className="text-2xl font-bold">{value}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
+      </div>
     </div>
   );
 }

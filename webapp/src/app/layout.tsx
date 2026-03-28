@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Digital Twin",
-  description: "Il tuo agente AI personale, alimentato dalle tue conversazioni",
+  description: "Your personal AI agent, powered by your conversations",
 };
 
 export default function RootLayout({
@@ -15,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="it">
+    <html lang="en">
       <body className={inter.className}>{children}</body>
     </html>
   );
