@@ -90,7 +90,7 @@ users ─────────── agents (1:1, auto-created)
 - Supabase project ([supabase.com](https://supabase.com))
 - OpenAI API key (for embeddings)
 - Anthropic API key (for agent engine)
-- Alpic CLI (`npm install -g @alpic-ai/cli`) — for tunnel to ChatGPT
+- cloudflared (`brew install cloudflared`) — for tunnel to ChatGPT
 - Google Cloud credentials (optional, for calendar integration)
 
 ### 1. Clone and Install
@@ -128,7 +128,7 @@ cp webapp/.env.example webapp/.env.local
 | `ANTHROPIC_API_KEY` | Yes | Anthropic API key for the agent engine (Claude) |
 | `OPENAI_API_KEY` | Yes | OpenAI API key for ada-002 embeddings |
 | `PORT` | No | Server port (default: `3001`) |
-| `MCP_URL` | Yes | Public URL of the MCP server. Set to your Alpic tunnel URL after running `alpic tunnel` |
+| `MCP_SERVER_URL` | Yes | Public URL of the MCP server. Set to your Cloudflare tunnel URL (e.g. `https://xxx.trycloudflare.com`) |
 
 #### Webapp (`webapp/.env.local`)
 
@@ -148,7 +148,9 @@ Then enable in Supabase Dashboard:
 
 ### 4. Run
 
-#### Start the Webapp
+You need **3 terminals** running simultaneously. Follow these steps in order.
+
+#### Step 1 — Terminal 1: Start the Webapp
 
 ```bash
 cd webapp
@@ -156,31 +158,67 @@ npm run dev
 # Runs on http://localhost:3000
 ```
 
-#### Start the MCP Server
+Leave this terminal running.
+
+#### Step 2 — Terminal 2: Start Cloudflare Tunnel
+
+Open a new terminal:
+
+```bash
+brew install cloudflared   # only the first time
+
+cloudflared tunnel --url http://localhost:3000
+```
+
+Wait for the tunnel to start. Copy the public URL from the output:
+
+```
+Your quick Tunnel has been created! Visit it at:
+https://some-random-words.trycloudflare.com
+```
+
+> **Note:** The URL changes every time you restart the tunnel.
+
+#### Step 3 — Update MCP Server `.env` with Tunnel URL
+
+Before starting the MCP server, update `MCP_SERVER_URL` in `mcp-server-alpic/.env` with the tunnel URL from Step 2:
+
+```
+MCP_SERVER_URL=https://some-random-words.trycloudflare.com
+```
+
+This is required for OAuth to work correctly — the server needs to know its public URL.
+
+#### Step 4 — Terminal 3: Start the MCP Server
+
+Open a new terminal:
 
 ```bash
 cd mcp-server-alpic
 npm run dev
-# Runs on http://localhost:3001 (or next available port)
+# Runs on http://localhost:3000 (Skybridge default port)
 ```
 
-#### Expose with Alpic Tunnel (for ChatGPT)
+> **Important:** The webapp runs on port 3000 first, so Skybridge may use port 3000 if you start it before the webapp, or the next available port. Make sure the tunnel port matches the MCP server port.
 
-In a separate terminal:
+> **Tip:** If port conflicts occur, start the MCP server first, note the port, then point `cloudflared` to that port.
 
-```bash
-alpic tunnel --port 3001
-# Returns a public URL like https://cool-marmot-fondue-420.alpic.dev
-```
-
-Then update `MCP_URL` in `mcp-server-alpic/.env` with the tunnel URL and restart the MCP server.
+Leave this terminal running.
 
 ### 5. Connect to ChatGPT
 
-1. ChatGPT > Settings > Apps > Add MCP
-2. Paste your Alpic tunnel URL + `/mcp` (e.g. `https://cool-marmot-fondue-420.alpic.dev/mcp`)
-3. Select OAuth, log in with your credentials
-4. Start chatting!
+1. Go to **ChatGPT > Settings > Apps > Add MCP App**
+2. Set a name (e.g. `dt`)
+3. Paste the tunnel URL + `/mcp` as the MCP server URL:
+   ```
+   https://some-random-words.trycloudflare.com/mcp
+   ```
+4. Set authentication to **OAuth**
+5. Check "Ho capito e voglio continuare" and click **Crea**
+6. ChatGPT will open a login popup — sign in with your Supabase account credentials
+7. Once authenticated, open a **new chat** and start using the tools
+
+> **Important:** Do not restart the MCP server between creating the app and logging in — OAuth sessions are stored in memory and will be lost on restart.
 
 ## Project Structure
 
