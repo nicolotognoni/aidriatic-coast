@@ -18,6 +18,7 @@ mcp-server-alpic/node_modules/
 .env
 .env.local
 .env.*.local
+!.env.example
 *.pem
 
 # AI assistant tooling

@@ -46,7 +46,7 @@ Digital Twin transforms your interactions with LLMs into a living, queryable kno
 
 | Component | Stack | Purpose |
 |-----------|-------|---------|
-| **mcp-server/** | TypeScript, mcp-use, Hono | MCP server with 12 tools, 2 widgets, OAuth |
+| **mcp-server-alpic/** | TypeScript, Skybridge, Alpic | MCP server with 12 tools, 2 widgets, OAuth |
 | **webapp/** | Next.js 14, Tailwind, shadcn/ui | Admin panel: memories, connections, plans, notifications, settings |
 | **supabase/** | PostgreSQL, pgvector, RLS | Database with vector search, row-level security, 8 tables |
 
@@ -85,41 +85,58 @@ users ─────────── agents (1:1, auto-created)
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 24+ (for MCP server with Skybridge)
+- Node.js 20+ (for webapp with Next.js)
 - Supabase project ([supabase.com](https://supabase.com))
 - OpenAI API key (for embeddings)
 - Anthropic API key (for agent engine)
+- Alpic CLI (`npm install -g @alpic-ai/cli`) — for tunnel to ChatGPT
 - Google Cloud credentials (optional, for calendar integration)
 
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/nicolotognoni/Digital-Twin.git
-cd Digital-Twin
+git clone https://github.com/your-org/aidriatic-coast.git
+cd aidriatic-coast
 
-cd mcp-server && npm install
+# Install MCP server dependencies
+cd mcp-server-alpic && npm install
+
+# Install webapp dependencies
 cd ../webapp && npm install
 ```
 
 ### 2. Configure Environment
 
+Each component has a `.env.example` file. Copy it and fill in your values:
+
 ```bash
 # MCP Server
-cp mcp-server/.env.example mcp-server/.env
-# Edit: SUPABASE_URL, SUPABASE_ANON_KEY, ANTHROPIC_API_KEY, OPENAI_API_KEY, MCP_URL
+cp mcp-server-alpic/.env.example mcp-server-alpic/.env
 
 # Webapp
-cat > webapp/.env.local << EOF
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=your-anon-key
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-EOF
-
-# Optional: Google Calendar
-# Add to both .env files:
-# GOOGLE_CLIENT_ID=your-google-client-id
-# GOOGLE_CLIENT_SECRET=your-google-client-secret
+cp webapp/.env.example webapp/.env.local
 ```
+
+#### MCP Server (`mcp-server-alpic/.env`)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `MCP_USE_OAUTH_SUPABASE_PROJECT_ID` | Yes | Your Supabase project ID (from Project Settings > General) |
+| `SUPABASE_URL` | Yes | Supabase API URL, e.g. `https://xxxxx.supabase.co` |
+| `SUPABASE_ANON_KEY` | Yes | Supabase publishable anon key (from Project Settings > API) |
+| `ANTHROPIC_API_KEY` | Yes | Anthropic API key for the agent engine (Claude) |
+| `OPENAI_API_KEY` | Yes | OpenAI API key for ada-002 embeddings |
+| `PORT` | No | Server port (default: `3001`) |
+| `MCP_URL` | Yes | Public URL of the MCP server. Set to your Alpic tunnel URL after running `alpic tunnel` |
+
+#### Webapp (`webapp/.env.local`)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Same Supabase API URL as MCP server |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | Yes | Same Supabase anon key as MCP server |
+| `OPENAI_API_KEY` | Yes | OpenAI API key for embeddings |
 
 ### 3. Set Up Supabase
 
@@ -131,21 +148,37 @@ Then enable in Supabase Dashboard:
 
 ### 4. Run
 
+#### Start the Webapp
+
 ```bash
-# Terminal 1: Tunnel (for ChatGPT access)
-cloudflared tunnel --url http://localhost:3001
-
-# Terminal 2: MCP Server (update MCP_URL in .env with tunnel URL first)
-cd mcp-server && npx tsx index.ts
-
-# Terminal 3: Webapp
-cd webapp && npm run dev
+cd webapp
+npm run dev
+# Runs on http://localhost:3000
 ```
+
+#### Start the MCP Server
+
+```bash
+cd mcp-server-alpic
+npm run dev
+# Runs on http://localhost:3001 (or next available port)
+```
+
+#### Expose with Alpic Tunnel (for ChatGPT)
+
+In a separate terminal:
+
+```bash
+alpic tunnel --port 3001
+# Returns a public URL like https://cool-marmot-fondue-420.alpic.dev
+```
+
+Then update `MCP_URL` in `mcp-server-alpic/.env` with the tunnel URL and restart the MCP server.
 
 ### 5. Connect to ChatGPT
 
 1. ChatGPT > Settings > Apps > Add MCP
-2. Paste your tunnel URL + `/mcp`
+2. Paste your Alpic tunnel URL + `/mcp` (e.g. `https://cool-marmot-fondue-420.alpic.dev/mcp`)
 3. Select OAuth, log in with your credentials
 4. Start chatting!
 
@@ -199,12 +232,12 @@ Digital-Twin/
 ## Deploy
 
 ```bash
-# Manufact Cloud
-cd mcp-server && npm run deploy
+# Alpic Cloud
+cd mcp-server-alpic && npm run deploy
 
-# Docker
-cd mcp-server && docker build -t digital-twin .
-docker run -p 3001:3001 --env-file .env digital-twin
+# Build for production
+cd mcp-server-alpic && npm run build
+cd mcp-server-alpic && npm run start
 ```
 
 ## License
