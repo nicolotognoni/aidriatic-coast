@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -12,7 +13,6 @@ import {
   Inbox,
   Settings,
   LogOut,
-  Zap,
 } from "lucide-react";
 
 interface NavItem {
@@ -56,9 +56,7 @@ export function Sidebar({ displayName, unreadCount }: SidebarProps) {
     <aside className="flex w-64 flex-col border-r bg-white">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-6 py-6">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground text-background">
-          <Zap size={18} />
-        </div>
+        <Image src="/logo.png" alt="Digital Twin" width={32} height={32} className="rounded-lg" />
         <span className="text-lg font-bold tracking-tight">DigitalTwin</span>
         <span className="ml-1 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Beta

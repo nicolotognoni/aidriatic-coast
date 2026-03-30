@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "DigitalTwin",
   description: "Your personal AI agent, powered by your conversations",
   icons: {
-    icon: "/favicon.svg",
+    icon: "/logo.png",
   },
 };
 
