@@ -1,20 +1,49 @@
-# Digital Twin
+<p align="center">
+  <img src="assets/logo.png" alt="Digital Twin Logo" width="120" height="120" style="border-radius: 20px;" />
+</p>
 
-> Turn your AI conversations into a cognitive Digital Twin — a persistent AI agent that knows you and can represent you to others.
+<h1 align="center">Digital Twin</h1>
 
-Digital Twin transforms your interactions with LLMs into a living, queryable knowledge base. Your Twin learns your skills, preferences, decisions, and communication style, then uses that understanding to interact with other people's Twins on your behalf.
+<p align="center">
+  <strong>Your AI-powered personal agent with a centralized memory layer. Create your Digital Twin, collaborate with friends' Twins via MCP, and access your plans and memories from any AI client — ChatGPT, Claude Code, or your own apps.</strong>
+</p>
 
-## How it works
+<p align="center">
+  <a href="#features"><img src="https://img.shields.io/badge/MCP_Tools-12-blue?style=flat-square" alt="MCP Tools" /></a>
+  <a href="#features"><img src="https://img.shields.io/badge/Specialist_Agents-8-purple?style=flat-square" alt="Agents" /></a>
+  <a href="#license"><img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License" /></a>
+  <a href="https://github.com/nicolotognoni/DigitalTwin"><img src="https://img.shields.io/github/stars/nicolotognoni/DigitalTwin?style=flat-square" alt="Stars" /></a>
+  <a href="https://github.com/nicolotognoni/DigitalTwin/issues"><img src="https://img.shields.io/github/issues/nicolotognoni/DigitalTwin?style=flat-square" alt="Issues" /></a>
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick Start</a> &middot;
+  <a href="#architecture">Architecture</a> &middot;
+  <a href="#mcp-tools">MCP Tools</a> &middot;
+  <a href="#deploy">Deploy</a>
+</p>
+
+---
+
+> **1st Place Winner** at [Buildathon @ Turin](https://lu.ma/turinbuildathon) (March 28, 2026) — an MCP Apps hackathon hosted by [Fonderia](https://fonderia.dev) at OGR Torino, sponsored by Xolo, Alpic, Lexroom & Fractal. Built in a single day, this project won first place out of 89 participants for its innovative approach to AI-powered personal agents.
+
+---
+
+## What is Digital Twin?
+
+Every user creates a **Digital Twin** — a personal AI agent that stores all your preferences, skills, opinions, and knowledge in a **centralized memory layer**. Your Twin is yours: it lives in a shared database, which means you can access your memories and plans from **any AI client** — create a plan on ChatGPT, then pull it up in Claude Code, or query it from your own app.
+
+But the real power is collaboration. Connect with friends, and your Twins can talk to each other directly through MCP. Create collaborative plans where specialist AI agents and your friends' Twins contribute together, share memories across users, and coordinate through Google Calendar — all from inside ChatGPT.
 
 ```
 ┌─────────────┐     ┌─────────────────────┐     ┌──────────────────────────┐
-│   ChatGPT   │────▶│  MCP Server         │────▶│  Supabase                │
-│  (you talk) │◀────│  (12 tools + OAuth) │◀────│  (pg + pgvector + auth)  │
+│   ChatGPT   │────>│  MCP Server         │────>│  Supabase                │
+│  (you talk) │<────│  (12 tools + OAuth) │<────│  (pg + pgvector + auth)  │
 └─────────────┘     └─────────────────────┘     └──────────────────────────┘
-                           ▲     │                         ▲
+                           ^     │                         ^
 ┌─────────────┐            │     │ Claude API              │
 │   Webapp    │────────────┘     │ + Web Search            │
-│  (manage)   │  API Routes      ▼                         │
+│  (manage)   │  API Routes      v                         │
 └─────────────┘           ┌─────────────────┐              │
                           │  Agent Engine   │              │
                           │  (specialist +  │──────────────┘
@@ -22,23 +51,28 @@ Digital Twin transforms your interactions with LLMs into a living, queryable kno
                           └─────────────────┘
 ```
 
-1. **Talk to ChatGPT** as you normally do — the MCP tools automatically save relevant facts about you
-2. **Your Twin builds up** a profile from your memories: identity, skills, preferences, opinions, goals
+## How It Works
+
+1. **Talk to ChatGPT** as you normally do — MCP tools automatically save relevant facts about you
+2. **Your Twin builds up** a centralized profile: identity, skills, preferences, opinions, goals
 3. **Connect with friends** through the webapp — send and accept connection requests
 4. **Ask each other's Twins** for feedback, reviews, and brainstorming through ChatGPT
 5. **Create collaborative plans** with specialist AI agents + your friends' Twins
-6. **Check availability** on friends' Google Calendar and request meetings
+6. **Access everything everywhere** — plans and memories live in a shared DB, queryable from ChatGPT, Claude Code, or any MCP-compatible client
+7. **Check availability** on friends' Google Calendar and request meetings
 
 ## Features
 
+- **Centralized Memory** — all memories and plans stored in a shared DB, accessible from any AI client (ChatGPT, Claude Code, custom apps)
 - **12 MCP Tools** — memory management, agent queries, collaborative planning, calendar, notifications
 - **2 Interactive Widgets** — agent team selector + notifications card (rendered in ChatGPT)
 - **8 Specialist Agents** — Frontend, Backend, Security, DevOps, UX, PM, Data, Mobile
+- **Cross-Client Portability** — create a plan on ChatGPT, retrieve it from Claude Code, or query it via API
+- **Twin-to-Twin Collaboration** — your Digital Twin talks directly to your friends' Twins
 - **Web Search** — agents research online for up-to-date recommendations in plans
 - **Google Calendar** — check friends' availability and request meetings
 - **Semantic Search** — pgvector embeddings for intelligent memory retrieval
-- **Agent-to-Agent** — ask a friend's Twin for their perspective on your work
-- **Plan Persistence** — plans saved to DB, retrievable from any client (ChatGPT, Claude Code)
+- **Plan Persistence** — plans saved to DB, retrievable from any client
 - **Notifications** — real-time notification system with widget in ChatGPT + webapp dashboard
 - **OAuth 2.1 + PKCE** — secure authentication with Supabase Auth
 
@@ -46,9 +80,9 @@ Digital Twin transforms your interactions with LLMs into a living, queryable kno
 
 | Component | Stack | Purpose |
 |-----------|-------|---------|
-| **mcp-server-alpic/** | TypeScript, Skybridge, Alpic | MCP server with 12 tools, 2 widgets, OAuth |
-| **webapp/** | Next.js 14, Tailwind, shadcn/ui | Admin panel: memories, connections, plans, notifications, settings |
-| **supabase/** | PostgreSQL, pgvector, RLS | Database with vector search, row-level security, 8 tables |
+| **mcp-server-alpic/** | TypeScript, Alpic, Hono | MCP server with 12 tools, 2 widgets, OAuth |
+| **webapp/** | Next.js 14, Tailwind, shadcn/ui | Dashboard: memories, connections, plans, notifications, settings |
+| **supabase/** | PostgreSQL, pgvector, RLS | Database with vector search, row-level security |
 
 ### Database Schema
 
@@ -56,9 +90,9 @@ Digital Twin transforms your interactions with LLMs into a living, queryable kno
 users ─────────── agents (1:1, auto-created)
   │
   ├── memories (pgvector embeddings, 9 categories)
-  ├── connections (friend requests, status: pending/accepted/rejected)
-  ├── plans (collaborative plans with full agent contributions)
-  ├── notifications (cross-user, created via SECURITY DEFINER)
+  ├── connections (friend requests: pending/accepted/rejected)
+  ├── plans (collaborative plans with agent contributions)
+  ├── notifications (cross-user, via SECURITY DEFINER)
   ├── calendar_requests (meeting proposals between users)
   ├── user_integrations (Google Calendar OAuth tokens)
   └── audit_log (agent interaction tracking)
@@ -85,171 +119,111 @@ users ─────────── agents (1:1, auto-created)
 
 ### Prerequisites
 
-- Node.js 24+ (for MCP server with Skybridge)
-- Node.js 20+ (for webapp with Next.js)
-- Supabase project ([supabase.com](https://supabase.com))
-- OpenAI API key (for embeddings)
-- Anthropic API key (for agent engine)
-- cloudflared (`brew install cloudflared`) — for tunnel to ChatGPT
-- Google Cloud credentials (optional, for calendar integration)
+- **Node.js** 24+ (MCP server) / 20+ (webapp)
+- **Supabase** project — [supabase.com](https://supabase.com)
+- **OpenAI API key** — for ada-002 embeddings
+- **Anthropic API key** — for agent engine (Claude)
+- **cloudflared** — `brew install cloudflared` (tunnel to ChatGPT)
+- **Google Cloud credentials** — optional, for calendar integration
 
-### 1. Clone and Install
+### 1. Clone & Install
 
 ```bash
-git clone https://github.com/your-org/aidriatic-coast.git
-cd aidriatic-coast
+git clone https://github.com/nicolotognoni/DigitalTwin.git
+cd DigitalTwin
 
-# Install MCP server dependencies
+# MCP server
 cd mcp-server-alpic && npm install
 
-# Install webapp dependencies
+# Webapp
 cd ../webapp && npm install
 ```
 
 ### 2. Configure Environment
 
-Each component has a `.env.example` file. Copy it and fill in your values:
-
 ```bash
-# MCP Server
 cp mcp-server-alpic/.env.example mcp-server-alpic/.env
-
-# Webapp
 cp webapp/.env.example webapp/.env.local
 ```
 
-#### MCP Server (`mcp-server-alpic/.env`)
+<details>
+<summary><strong>MCP Server environment variables</strong></summary>
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `MCP_USE_OAUTH_SUPABASE_PROJECT_ID` | Yes | Your Supabase project ID (from Project Settings > General) |
-| `SUPABASE_URL` | Yes | Supabase API URL, e.g. `https://xxxxx.supabase.co` |
-| `SUPABASE_ANON_KEY` | Yes | Supabase publishable anon key (from Project Settings > API) |
-| `ANTHROPIC_API_KEY` | Yes | Anthropic API key for the agent engine (Claude) |
-| `OPENAI_API_KEY` | Yes | OpenAI API key for ada-002 embeddings |
-| `PORT` | No | Server port (default: `3001`) |
-| `MCP_SERVER_URL` | Yes | Public URL of the MCP server. Set to your Cloudflare tunnel URL (e.g. `https://xxx.trycloudflare.com`) |
-
-#### Webapp (`webapp/.env.local`)
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Same Supabase API URL as MCP server |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | Yes | Same Supabase anon key as MCP server |
+| `MCP_USE_OAUTH_SUPABASE_PROJECT_ID` | Yes | Supabase project ID |
+| `SUPABASE_URL` | Yes | Supabase API URL |
+| `SUPABASE_ANON_KEY` | Yes | Supabase anon key |
+| `ANTHROPIC_API_KEY` | Yes | Anthropic API key for Claude |
 | `OPENAI_API_KEY` | Yes | OpenAI API key for embeddings |
+| `PORT` | No | Server port (default: `3001`) |
+| `MCP_SERVER_URL` | Yes | Public URL (Cloudflare tunnel URL) |
+
+</details>
+
+<details>
+<summary><strong>Webapp environment variables</strong></summary>
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase API URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | Yes | Supabase anon key |
+| `OPENAI_API_KEY` | Yes | OpenAI API key for embeddings |
+
+</details>
 
 ### 3. Set Up Supabase
 
-Run the migrations from `supabase/migrations/` in order (00001 through 00011) in the Supabase SQL Editor.
+Run the migrations from `supabase/migrations/` (00001–00011) in the Supabase SQL Editor.
 
-Then enable in Supabase Dashboard:
+Then enable:
 - **Authentication > OAuth Server** — Enable + Allow Dynamic OAuth Apps
 - **Authentication > Sign In / Providers** — Enable Email (with password)
 
-### 4. Run
-
-You need **3 terminals** running simultaneously. Follow these steps in order.
-
-#### Step 1 — Terminal 1: Start the Webapp
+### 4. Run (3 Terminals)
 
 ```bash
-cd webapp
-npm run dev
-# Runs on http://localhost:3000
+# Terminal 1 — Webapp
+cd webapp && npm run dev                          # http://localhost:3000
+
+# Terminal 2 — Tunnel
+cloudflared tunnel --url http://localhost:3001     # Copy the public URL
+
+# Terminal 3 — MCP Server (set MCP_SERVER_URL in .env first)
+cd mcp-server-alpic && npm run dev                # http://localhost:3001
 ```
-
-Leave this terminal running.
-
-#### Step 2 — Terminal 2: Start Cloudflare Tunnel
-
-Open a new terminal:
-
-```bash
-brew install cloudflared   # only the first time
-
-cloudflared tunnel --url http://localhost:3000
-```
-
-Wait for the tunnel to start. Copy the public URL from the output:
-
-```
-Your quick Tunnel has been created! Visit it at:
-https://some-random-words.trycloudflare.com
-```
-
-> **Note:** The URL changes every time you restart the tunnel.
-
-#### Step 3 — Update MCP Server `.env` with Tunnel URL
-
-Before starting the MCP server, update `MCP_SERVER_URL` in `mcp-server-alpic/.env` with the tunnel URL from Step 2:
-
-```
-MCP_SERVER_URL=https://some-random-words.trycloudflare.com
-```
-
-This is required for OAuth to work correctly — the server needs to know its public URL.
-
-#### Step 4 — Terminal 3: Start the MCP Server
-
-Open a new terminal:
-
-```bash
-cd mcp-server-alpic
-npm run dev
-# Runs on http://localhost:3000 (Skybridge default port)
-```
-
-> **Important:** The webapp runs on port 3000 first, so Skybridge may use port 3000 if you start it before the webapp, or the next available port. Make sure the tunnel port matches the MCP server port.
-
-> **Tip:** If port conflicts occur, start the MCP server first, note the port, then point `cloudflared` to that port.
-
-Leave this terminal running.
 
 ### 5. Connect to ChatGPT
 
 1. Go to **ChatGPT > Settings > Apps > Add MCP App**
-2. Set a name (e.g. `dt`)
-3. Paste the tunnel URL + `/mcp` as the MCP server URL:
-   ```
-   https://some-random-words.trycloudflare.com/mcp
-   ```
+2. Set a name (e.g. `digital-twin`)
+3. Paste your tunnel URL + `/mcp` as the server URL
 4. Set authentication to **OAuth**
-5. Check "Ho capito e voglio continuare" and click **Crea**
-6. ChatGPT will open a login popup — sign in with your Supabase account credentials
-7. Once authenticated, open a **new chat** and start using the tools
-
-> **Important:** Do not restart the MCP server between creating the app and logging in — OAuth sessions are stored in memory and will be lost on restart.
+5. Sign in with your Supabase credentials
+6. Open a **new chat** and start talking to your Twin
 
 ## Project Structure
 
 ```
-Digital-Twin/
-├── mcp-server/
-│   ├── index.ts                    # Server + 12 tools + OAuth
-│   ├── resources/
-│   │   ├── agent-selector/         # Agent team builder widget
-│   │   └── notifications/          # Notifications card widget
-│   └── src/services/
-│       ├── supabase.ts             # Supabase client factory
-│       ├── embedding.ts            # OpenAI ada-002 embeddings
-│       ├── memory.ts               # Memory CRUD with deduplication
-│       ├── agent-engine.ts         # Cross-user Twin queries via Claude
-│       ├── plan-engine.ts          # Collaborative planning with web search
-│       ├── plan-storage.ts         # Plan persistence (save/get/list)
-│       ├── notification-service.ts # Cross-user notifications
-│       ├── calendar-service.ts     # Google Calendar integration
-│       ├── specialist-agents.ts    # 8 built-in specialist agents
-│       └── prompt-builder.ts       # System prompt from memories
+DigitalTwin/
+├── mcp-server-alpic/
+│   ├── index.ts                    # Server entry + 12 tools + OAuth
+│   ├── server/src/
+│   │   ├── services/
+│   │   │   ├── memory.ts           # Memory CRUD with deduplication
+│   │   │   ├── agent-engine.ts     # Cross-user Twin queries via Claude
+│   │   │   ├── plan-engine.ts      # Collaborative planning + web search
+│   │   │   ├── plan-storage.ts     # Plan persistence
+│   │   │   ├── calendar-service.ts # Google Calendar integration
+│   │   │   └── ...
+│   │   └── types.ts
+│   └── web/src/widgets/
+│       ├── agent-selector.tsx      # Agent team builder widget
+│       └── notifications.tsx       # Notifications card widget
 ├── webapp/
 │   └── src/app/
-│       ├── (auth)/login/           # Email + password + Google login
-│       ├── (dashboard)/
-│       │   ├── dashboard/          # Stats overview
-│       │   ├── twin/               # Twin profile + memories
-│       │   ├── network/            # User search + friend requests
-│       │   ├── plans/              # Saved collaborative plans
-│       │   ├── notifications/      # Notification center
-│       │   └── settings/           # Google Calendar integration
+│       ├── (auth)/login/           # Auth page
+│       ├── (dashboard)/            # Dashboard, Twin, Network, Plans, Settings
 │       ├── oauth/consent/          # OAuth consent screen for MCP
 │       └── api/                    # REST endpoints
 └── supabase/
@@ -258,26 +232,44 @@ Digital-Twin/
 
 ## Key Design Decisions
 
-- **ChatGPT-first** — The webapp is for admin; ChatGPT is where users live
-- **Human connections only** — Friend requests are sent/accepted by users; agents talk only after acceptance
-- **pgvector** — Semantic search in-database, no external vector service
-- **Deduplication** — 95% cosine similarity threshold prevents duplicate memories
-- **Web search in plans** — Agents use Anthropic's web_search tool for current recommendations
-- **Parallel agent contributions** — Plan agents run in parallel via Promise.all (~2x faster)
-- **Per-user calendar** — Each user connects their own Google Calendar; agents access only their owner's calendar
-- **SECURITY DEFINER** — Cross-user operations (notifications, agent data) use Postgres security definer functions
+| Decision | Rationale |
+|----------|-----------|
+| **ChatGPT-first** | The webapp is admin; ChatGPT is where users live |
+| **Human connections only** | Friend requests are user-initiated; agents talk only after acceptance |
+| **pgvector** | Semantic search in-database, no external vector service |
+| **95% cosine dedup** | Prevents duplicate memories automatically |
+| **Web search in plans** | Agents use Anthropic's `web_search` tool for current recommendations |
+| **Parallel agents** | `Promise.all` for plan contributions (~2x faster) |
+| **Per-user calendar** | Each user connects their own Google Calendar; agents access only their owner's |
+| **SECURITY DEFINER** | Cross-user operations use Postgres security definer functions |
 
 ## Deploy
 
 ```bash
-# Alpic Cloud
-cd mcp-server-alpic && npm run deploy
-
 # Build for production
 cd mcp-server-alpic && npm run build
-cd mcp-server-alpic && npm run start
+
+# Deploy to Alpic Cloud
+cd mcp-server-alpic && npm run deploy
 ```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-MIT
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
+---
+
+<p align="center">
+  Built with Claude API, Supabase, Next.js & Alpic<br/>
+  <sub>Made by <a href="https://github.com/nicolotognoni">Nicolo Tognoni</a></sub>
+</p>
