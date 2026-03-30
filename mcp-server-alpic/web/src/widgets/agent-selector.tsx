@@ -17,29 +17,20 @@ interface FriendAgent extends Agent {
 
 function renderMarkdown(md: string): string {
   return md
-    // Code blocks
     .replace(/```(\w*)\n([\s\S]*?)```/g, "<pre><code>$2</code></pre>")
-    // Inline code
     .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
-    // Headers
     .replace(/^#### (.+)$/gm, "<h4>$1</h4>")
     .replace(/^### (.+)$/gm, "<h3>$1</h3>")
     .replace(/^## (.+)$/gm, "<h2>$1</h2>")
     .replace(/^# (.+)$/gm, "<h1>$1</h1>")
-    // Bold and italic
     .replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>")
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    // Unordered lists
     .replace(/^[-*] (.+)$/gm, "<li>$1</li>")
     .replace(/((?:<li>.*<\/li>\n?)+)/g, "<ul>$1</ul>")
-    // Numbered lists
     .replace(/^\d+\. (.+)$/gm, "<li>$1</li>")
-    // Horizontal rules
     .replace(/^---$/gm, "<hr/>")
-    // Paragraphs (lines not already wrapped)
     .replace(/^(?!<[hluop]|<hr|<pre|<li)(.+)$/gm, "<p>$1</p>")
-    // Clean up
     .replace(/<\/ul>\s*<ul>/g, "")
     .replace(/\n{2,}/g, "\n");
 }
@@ -54,7 +45,7 @@ function Markdown({ content }: { readonly content: string }) {
   );
 }
 
-function AgentCard({
+function AgentChip({
   agent,
   selected,
   onToggle,
@@ -66,28 +57,20 @@ function AgentCard({
   readonly badge?: string;
 }) {
   return (
-    <div
+    <button
       onClick={onToggle}
       style={{
-        ...styles.card,
-        ...(selected ? styles.cardSelected : {}),
+        ...s.chip,
+        ...(selected ? s.chipSelected : {}),
       }}
     >
-      <div style={styles.cardHeader}>
-        <span style={styles.cardIcon}>{agent.icon}</span>
-        <div
-          style={{
-            ...styles.checkbox,
-            ...(selected ? styles.checkboxSelected : {}),
-          }}
-        >
-          {selected && "\u2713"}
-        </div>
-      </div>
-      <div style={styles.cardName}>{agent.name}</div>
-      <div style={styles.cardSpecialty}>{agent.specialty}</div>
-      {badge && <div style={styles.badge}>{badge}</div>}
-    </div>
+      <span style={s.chipIcon}>{agent.icon}</span>
+      <span style={s.chipName}>{agent.name}</span>
+      {badge && <span style={s.chipBadge}>{badge}</span>}
+      <span style={{ ...s.chipCheck, ...(selected ? s.chipCheckSelected : {}) }}>
+        {selected ? "\u2713" : "\u002B"}
+      </span>
+    </button>
   );
 }
 
@@ -129,8 +112,11 @@ function AgentSelector() {
 
   if (isPending || !toolInfo.isSuccess) {
     return (
-      <div data-theme={theme} style={styles.container}>
-        <div style={styles.shimmer}>Loading agents...</div>
+      <div data-theme={theme} style={s.container}>
+        <div style={s.loadingContainer}>
+          <div style={s.spinner} />
+          <span style={s.loadingText}>Loading agents...</span>
+        </div>
       </div>
     );
   }
@@ -140,21 +126,30 @@ function AgentSelector() {
   const friendAgents = output.friend_agents as readonly FriendAgent[];
 
   return (
-    <div data-theme={theme} style={styles.container}>
+    <div data-theme={theme} style={s.container}>
       {/* Header */}
-      <div style={styles.header}>
-        <h2 style={styles.title}>Build Your Team</h2>
-        <p style={styles.subtitle}>
-          Select agents to collaborate on your plan
-        </p>
+      <div style={s.header}>
+        <div style={s.headerLeft}>
+          <div style={s.headerDot} />
+          <div>
+            <h2 style={s.title}>Build Your Team</h2>
+            <p style={s.subtitle}>Select agents to collaborate on your plan</p>
+          </div>
+        </div>
+        <div style={s.selectedBadge} data-llm="selected-count">
+          {selectedIds.length} selected
+        </div>
       </div>
 
       {/* Specialist Agents */}
-      <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Specialist Agents</h3>
-        <div style={styles.grid} data-llm="specialist-agents">
+      <div style={s.section}>
+        <div style={s.sectionHeader}>
+          <span style={s.sectionLabel}>Specialist Agents</span>
+          <span style={s.sectionCount}>{allAgents.length}</span>
+        </div>
+        <div style={s.chipGrid} data-llm="specialist-agents">
           {allAgents.map((agent) => (
-            <AgentCard
+            <AgentChip
               key={agent.id}
               agent={agent}
               selected={selectedSet.has(agent.id)}
@@ -166,11 +161,14 @@ function AgentSelector() {
 
       {/* Friend Agents */}
       {friendAgents.length > 0 && (
-        <div style={styles.section}>
-          <h3 style={styles.sectionTitle}>Friends' Digital Twins</h3>
-          <div style={styles.grid} data-llm="friend-agents">
+        <div style={s.section}>
+          <div style={s.sectionHeader}>
+            <span style={s.sectionLabel}>Friends' Digital Twins</span>
+            <span style={s.sectionCount}>{friendAgents.length}</span>
+          </div>
+          <div style={s.chipGrid} data-llm="friend-agents">
             {friendAgents.map((agent) => (
-              <AgentCard
+              <AgentChip
                 key={agent.id}
                 agent={agent}
                 selected={selectedSet.has(agent.id)}
@@ -183,24 +181,22 @@ function AgentSelector() {
       )}
 
       {/* Plan Input */}
-      <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Describe Your Plan</h3>
+      <div style={s.section}>
+        <div style={s.sectionHeader}>
+          <span style={s.sectionLabel}>Describe Your Plan</span>
+        </div>
         <textarea
           value={planDescription}
           onChange={(e) => setPlanDescription(e.target.value)}
           placeholder="Describe the project or feature you want to plan..."
-          style={styles.textarea}
+          style={s.textarea}
           rows={3}
           data-llm="plan-description"
         />
       </div>
 
-      {/* Action */}
-      <div style={styles.footer}>
-        <span style={styles.selectedCount} data-llm="selected-count">
-          {selectedIds.length} agent{selectedIds.length !== 1 ? "s" : ""}{" "}
-          selected
-        </span>
+      {/* Action Footer */}
+      <div style={s.footer}>
         <button
           onClick={handleCreatePlan}
           disabled={
@@ -209,30 +205,32 @@ function AgentSelector() {
             isCreatingPlan
           }
           style={{
-            ...styles.button,
+            ...s.button,
             ...(selectedIds.length === 0 ||
             !planDescription.trim() ||
             isCreatingPlan
-              ? styles.buttonDisabled
+              ? s.buttonDisabled
               : {}),
           }}
         >
-          {isCreatingPlan ? "Creating plan..." : "Create Plan"}
+          {isCreatingPlan ? "Creating..." : "Create Plan"}
         </button>
       </div>
 
       {/* Loading state */}
       {isCreatingPlan && (
-        <div style={styles.loadingBanner}>
-          <div style={styles.spinner} />
-          Agents are collaborating on your plan...
+        <div style={s.collaboratingBanner}>
+          <div style={s.spinnerSmall} />
+          <span>Agents are collaborating on your plan...</span>
         </div>
       )}
 
       {/* Plan Result */}
       {planResult && (
-        <div style={styles.planResult}>
-          <h3 style={styles.planResultTitle}>Collaborative Plan</h3>
+        <div style={s.resultContainer}>
+          <div style={s.resultHeader}>
+            <h3 style={s.resultTitle}>Collaborative Plan</h3>
+          </div>
 
           {/* Agent contributions */}
           {((): React.ReactNode => {
@@ -245,9 +243,10 @@ function AgentSelector() {
             }> | undefined;
             if (!contributions) return null;
             return contributions.map((c) => (
-              <div key={c.agentId} style={styles.contribution}>
-                <div style={styles.contributionHeader}>
-                  {c.icon} {c.agentName}
+              <div key={c.agentId} style={s.contribution}>
+                <div style={s.contributionHeader}>
+                  <span style={s.contributionIcon}>{c.icon}</span>
+                  <span style={s.contributionName}>{c.agentName}</span>
                 </div>
                 <Markdown content={c.contribution} />
               </div>
@@ -255,8 +254,10 @@ function AgentSelector() {
           })()}
 
           {/* Unified plan */}
-          <div style={styles.unifiedPlan}>
-            <h4 style={styles.unifiedPlanTitle}>Unified Plan</h4>
+          <div style={s.unifiedPlan}>
+            <div style={s.unifiedPlanHeader}>
+              <span style={s.unifiedPlanLabel}>Unified Plan</span>
+            </div>
             <Markdown
               content={
                 ((planResult.structuredContent as Record<string, unknown>)
@@ -270,202 +271,304 @@ function AgentSelector() {
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
+const s: Record<string, React.CSSProperties> = {
   container: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     maxWidth: 700,
     margin: "0 auto",
     padding: 24,
     color: "var(--text-primary)",
     backgroundColor: "var(--bg-primary)",
   },
-  shimmer: {
-    padding: 40,
-    textAlign: "center",
-    color: "var(--text-secondary)",
+
+  // Loading
+  loadingContainer: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    padding: 48,
   },
+  loadingText: {
+    fontSize: 13,
+    color: "var(--text-tertiary)",
+  },
+  spinner: {
+    width: 20,
+    height: 20,
+    border: "2px solid var(--border-color)",
+    borderTopColor: "var(--accent)",
+    borderRadius: "50%",
+    animation: "spin 0.8s linear infinite",
+  },
+
+  // Header
   header: {
-    marginBottom: 24,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 28,
+    paddingBottom: 20,
+    borderBottom: "1px solid var(--border-color)",
+  },
+  headerLeft: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+  },
+  headerDot: {
+    width: 8,
+    height: 8,
+    borderRadius: "50%",
+    backgroundColor: "var(--accent)",
+    flexShrink: 0,
   },
   title: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 700,
     margin: 0,
-    marginBottom: 4,
+    letterSpacing: "-0.02em",
     color: "var(--text-primary)",
   },
   subtitle: {
-    fontSize: 14,
-    color: "var(--text-secondary)",
-    margin: 0,
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
     fontSize: 13,
+    color: "var(--text-tertiary)",
+    margin: 0,
+    marginTop: 2,
+  },
+  selectedBadge: {
+    fontSize: 11,
     fontWeight: 600,
-    textTransform: "uppercase" as const,
-    letterSpacing: "0.05em",
-    color: "#888",
+    color: "var(--text-secondary)",
+    backgroundColor: "var(--accent-soft)",
+    border: "1px solid var(--accent-border)",
+    borderRadius: "var(--radius-full)",
+    padding: "4px 12px",
+    letterSpacing: "0.02em",
+  },
+
+  // Sections
+  section: {
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
     marginBottom: 12,
   },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-    gap: 10,
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: 600,
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.06em",
+    color: "var(--text-tertiary)",
   },
-  card: {
-    border: "1px solid var(--border-color)",
-    borderRadius: 10,
-    padding: 14,
-    cursor: "pointer",
-    transition: "all 0.15s",
-    backgroundColor: "var(--bg-card)",
+  sectionCount: {
+    fontSize: 10,
+    fontWeight: 600,
+    color: "var(--badge-text)",
+    backgroundColor: "var(--badge-bg)",
+    borderRadius: "var(--radius-full)",
+    padding: "1px 7px",
   },
-  cardSelected: {
-    borderColor: "var(--border-selected)",
-    backgroundColor: "var(--bg-secondary)",
-    boxShadow: "0 0 0 1px var(--border-selected)",
-  },
-  cardHeader: {
+
+  // Agent Chips
+  chipGrid: {
     display: "flex",
-    justifyContent: "space-between",
+    flexWrap: "wrap" as const,
+    gap: 8,
+  },
+  chip: {
+    display: "flex",
     alignItems: "center",
-    marginBottom: 8,
+    gap: 8,
+    padding: "10px 14px",
+    borderRadius: "var(--radius-md)",
+    border: "1px solid var(--border-color)",
+    backgroundColor: "var(--bg-card)",
+    cursor: "pointer",
+    transition: "all 0.15s ease",
+    boxShadow: "var(--shadow-sm)",
+    fontSize: 13,
+    fontFamily: "inherit",
+    color: "var(--text-primary)",
   },
-  cardIcon: {
-    fontSize: 24,
+  chipSelected: {
+    borderColor: "var(--border-selected)",
+    backgroundColor: "var(--bg-active)",
+    boxShadow: "var(--shadow-focus)",
   },
-  checkbox: {
-    width: 20,
-    height: 20,
+  chipIcon: {
+    fontSize: 18,
+    lineHeight: 1,
+  },
+  chipName: {
+    fontSize: 13,
+    fontWeight: 500,
+    color: "var(--text-primary)",
+  },
+  chipBadge: {
+    fontSize: 10,
+    color: "var(--text-tertiary)",
+    backgroundColor: "var(--badge-bg)",
+    borderRadius: "var(--radius-full)",
+    padding: "1px 6px",
+    fontWeight: 500,
+  },
+  chipCheck: {
+    width: 18,
+    height: 18,
     borderRadius: 6,
     border: "1.5px solid var(--border-color)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: 12,
-    fontWeight: 700,
-    color: "#fff",
-  },
-  checkboxSelected: {
-    backgroundColor: "var(--checkbox-bg)",
-    borderColor: "var(--checkbox-bg)",
-  },
-  cardName: {
-    fontSize: 14,
-    fontWeight: 600,
-    marginBottom: 4,
-    color: "var(--text-primary)",
-  },
-  cardSpecialty: {
     fontSize: 11,
-    color: "var(--text-secondary)",
-    lineHeight: 1.3,
+    fontWeight: 700,
+    color: "var(--text-muted)",
+    flexShrink: 0,
+    marginLeft: 2,
+    transition: "all 0.15s ease",
   },
-  badge: {
-    marginTop: 6,
-    fontSize: 10,
-    color: "var(--text-secondary)",
-    backgroundColor: "var(--badge-bg)",
-    borderRadius: 4,
-    padding: "2px 6px",
-    display: "inline-block",
+  chipCheckSelected: {
+    backgroundColor: "var(--accent)",
+    borderColor: "var(--accent)",
+    color: "var(--bg-primary)",
   },
+
+  // Textarea
   textarea: {
     width: "100%",
-    padding: 12,
+    padding: 14,
     border: "1px solid var(--input-border)",
-    borderRadius: 8,
-    fontSize: 14,
+    borderRadius: "var(--radius-md)",
+    fontSize: 13,
     fontFamily: "inherit",
+    lineHeight: 1.6,
     resize: "vertical" as const,
     outline: "none",
     boxSizing: "border-box" as const,
-    backgroundColor: "var(--bg-card)",
+    backgroundColor: "var(--input-bg)",
     color: "var(--text-primary)",
+    transition: "border-color 0.15s ease",
   },
+
+  // Footer
   footer: {
     display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
+    justifyContent: "flex-end",
     paddingTop: 16,
     borderTop: "1px solid var(--border-color)",
   },
-  selectedCount: {
-    fontSize: 13,
-    color: "var(--text-secondary)",
-  },
   button: {
-    padding: "10px 24px",
-    backgroundColor: "var(--btn-bg)",
-    color: "#fff",
+    padding: "10px 28px",
+    backgroundColor: "var(--accent)",
+    color: "var(--bg-primary)",
     border: "none",
-    borderRadius: 8,
-    fontSize: 14,
+    borderRadius: "var(--radius-full)",
+    fontSize: 13,
     fontWeight: 600,
+    fontFamily: "inherit",
     cursor: "pointer",
+    transition: "all 0.15s ease",
+    letterSpacing: "0.01em",
   },
   buttonDisabled: {
-    backgroundColor: "var(--border-color)",
+    backgroundColor: "var(--badge-bg)",
+    color: "var(--text-muted)",
     cursor: "not-allowed",
   },
-  loadingBanner: {
+
+  // Collaborating banner
+  collaboratingBanner: {
     marginTop: 16,
     padding: 16,
-    backgroundColor: "var(--loading-bg)",
-    borderRadius: 8,
+    backgroundColor: "var(--accent-soft)",
+    border: "1px solid var(--accent-border)",
+    borderRadius: "var(--radius-md)",
     display: "flex",
     alignItems: "center",
     gap: 12,
-    fontSize: 14,
-    color: "var(--text-primary)",
+    fontSize: 13,
+    color: "var(--text-secondary)",
+    animation: "fadeIn 0.3s ease-out",
   },
-  spinner: {
-    width: 18,
-    height: 18,
-    border: "2px solid #ddd",
-    borderTopColor: "#111",
+  spinnerSmall: {
+    width: 16,
+    height: 16,
+    border: "2px solid var(--border-color)",
+    borderTopColor: "var(--accent)",
     borderRadius: "50%",
     animation: "spin 0.8s linear infinite",
+    flexShrink: 0,
   },
-  planResult: {
-    marginTop: 20,
+
+  // Plan Result
+  resultContainer: {
+    marginTop: 24,
+    paddingTop: 24,
     borderTop: "1px solid var(--border-color)",
-    paddingTop: 20,
+    animation: "slideIn 0.4s ease-out",
   },
-  planResultTitle: {
-    fontSize: 18,
+  resultHeader: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 20,
+  },
+  resultTitle: {
+    fontSize: 17,
     fontWeight: 700,
-    marginBottom: 16,
+    margin: 0,
+    letterSpacing: "-0.01em",
     color: "var(--text-primary)",
   },
+
+  // Contributions
   contribution: {
-    marginBottom: 16,
-    padding: 14,
+    marginBottom: 12,
+    padding: 16,
     backgroundColor: "var(--bg-secondary)",
-    borderRadius: 8,
+    borderRadius: "var(--radius-md)",
     border: "1px solid var(--border-color)",
   },
   contributionHeader: {
-    fontSize: 14,
-    fontWeight: 600,
-    marginBottom: 8,
-    color: "var(--text-primary)",
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 10,
+    paddingBottom: 10,
+    borderBottom: "1px solid var(--border-color)",
   },
-  unifiedPlan: {
-    marginTop: 20,
-    padding: 16,
-    backgroundColor: "var(--plan-bg)",
-    borderRadius: 8,
-    border: "1px solid var(--plan-border)",
-  },
-  unifiedPlanTitle: {
+  contributionIcon: {
     fontSize: 16,
-    fontWeight: 700,
-    marginBottom: 12,
+  },
+  contributionName: {
+    fontSize: 13,
+    fontWeight: 600,
     color: "var(--text-primary)",
+  },
+
+  // Unified plan
+  unifiedPlan: {
+    marginTop: 16,
+    padding: 20,
+    backgroundColor: "var(--bg-secondary)",
+    borderRadius: "var(--radius-md)",
+    border: "1px solid var(--border-color)",
+  },
+  unifiedPlanHeader: {
+    marginBottom: 12,
+    paddingBottom: 10,
+    borderBottom: "1px solid var(--border-color)",
+  },
+  unifiedPlanLabel: {
+    fontSize: 11,
+    fontWeight: 600,
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.06em",
+    color: "var(--text-tertiary)",
   },
 };
 

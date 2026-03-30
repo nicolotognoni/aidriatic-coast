@@ -50,21 +50,19 @@ function NotificationCard({
   const label = TYPE_LABELS[notification.type] ?? notification.type;
 
   return (
-    <div style={styles.card}>
-      <div style={styles.cardLeft}>
-        <span style={styles.icon}>{icon}</span>
+    <div style={s.card}>
+      <div style={s.cardIcon}>
+        <span style={s.iconEmoji}>{icon}</span>
       </div>
-      <div style={styles.cardContent}>
-        <div style={styles.cardTop}>
-          <span style={styles.cardTitle}>{notification.title}</span>
-          <span style={styles.time}>
-            {timeAgo(notification.created_at)}
-          </span>
+      <div style={s.cardContent}>
+        <div style={s.cardTop}>
+          <span style={s.cardTitle}>{notification.title}</span>
+          <span style={s.time}>{timeAgo(notification.created_at)}</span>
         </div>
         {notification.body && (
-          <div style={styles.cardBody}>{notification.body}</div>
+          <p style={s.cardBody}>{notification.body}</p>
         )}
-        <div style={styles.typeBadge}>{label}</div>
+        <span style={s.typeBadge}>{label}</span>
       </div>
     </div>
   );
@@ -77,8 +75,11 @@ function NotificationsWidget() {
 
   if (isPending || !toolInfo.isSuccess) {
     return (
-      <div data-theme={theme} style={styles.container}>
-        <div style={styles.empty}>Loading notifications...</div>
+      <div data-theme={theme} style={s.container}>
+        <div style={s.loadingContainer}>
+          <div style={s.spinner} />
+          <span style={s.loadingText}>Loading notifications...</span>
+        </div>
       </div>
     );
   }
@@ -87,20 +88,26 @@ function NotificationsWidget() {
   const notifications = output.notifications as readonly NotificationItem[];
 
   return (
-    <div data-theme={theme} style={styles.container}>
-      <div style={styles.header}>
-        <h2 style={styles.title}>{"\uD83D\uDD14"} Notifications</h2>
+    <div data-theme={theme} style={s.container}>
+      {/* Header */}
+      <div style={s.header}>
+        <div style={s.headerLeft}>
+          <div style={s.headerDot} />
+          <h2 style={s.title}>Notifications</h2>
+        </div>
         {notifications.length > 0 && (
-          <span style={styles.headerBadge}>{notifications.length} new</span>
+          <span style={s.countBadge}>{notifications.length} new</span>
         )}
       </div>
 
+      {/* Content */}
       {notifications.length === 0 ? (
-        <div style={styles.empty}>
-          Nessuna notifica! Tutto tranquillo. {"\u2728"}
+        <div style={s.empty}>
+          <span style={s.emptyIcon}>{"\u2728"}</span>
+          <span style={s.emptyText}>Nessuna notifica! Tutto tranquillo.</span>
         </div>
       ) : (
-        <div style={styles.list} data-llm="notification-list">
+        <div style={s.list} data-llm="notification-list">
           {notifications.map((n: NotificationItem) => (
             <NotificationCard key={n.id} notification={n} />
           ))}
@@ -110,62 +117,123 @@ function NotificationsWidget() {
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
+const s: Record<string, React.CSSProperties> = {
   container: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    maxWidth: 500,
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    maxWidth: 520,
     margin: "0 auto",
-    padding: 20,
+    padding: 24,
     color: "var(--text-primary)",
     backgroundColor: "var(--bg-primary)",
   },
+
+  // Loading
+  loadingContainer: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    padding: 40,
+  },
+  loadingText: {
+    fontSize: 13,
+    color: "var(--text-tertiary)",
+  },
+  spinner: {
+    width: 18,
+    height: 18,
+    border: "2px solid var(--border-color)",
+    borderTopColor: "var(--accent)",
+    borderRadius: "50%",
+    animation: "spin 0.8s linear infinite",
+  },
+
+  // Header
   header: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottom: "1px solid var(--border-color)",
+  },
+  headerLeft: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+  },
+  headerDot: {
+    width: 8,
+    height: 8,
+    borderRadius: "50%",
+    backgroundColor: "var(--accent)",
+    flexShrink: 0,
   },
   title: {
     fontSize: 18,
     fontWeight: 700,
     margin: 0,
+    letterSpacing: "-0.02em",
     color: "var(--text-primary)",
   },
-  headerBadge: {
-    fontSize: 12,
+  countBadge: {
+    fontSize: 11,
     fontWeight: 600,
-    backgroundColor: "#ef4444",
-    color: "#fff",
-    borderRadius: 12,
+    backgroundColor: "var(--accent)",
+    color: "var(--bg-primary)",
+    borderRadius: "var(--radius-full)",
     padding: "3px 10px",
+    letterSpacing: "0.02em",
   },
+
+  // Empty
   empty: {
-    padding: 32,
-    textAlign: "center" as const,
-    color: "var(--empty-color)",
-    fontSize: 14,
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "center",
+    gap: 8,
+    padding: 40,
   },
+  emptyIcon: {
+    fontSize: 24,
+    opacity: 0.4,
+  },
+  emptyText: {
+    fontSize: 13,
+    color: "var(--text-tertiary)",
+  },
+
+  // List
   list: {
     display: "flex",
     flexDirection: "column" as const,
     gap: 8,
   },
+
+  // Card
   card: {
     display: "flex",
-    gap: 12,
-    padding: 12,
-    borderRadius: 10,
+    gap: 14,
+    padding: 14,
+    borderRadius: "var(--radius-md)",
     border: "1px solid var(--border-color)",
     backgroundColor: "var(--bg-card)",
+    boxShadow: "var(--shadow-sm)",
+    transition: "all 0.15s ease",
+    animation: "fadeIn 0.3s ease-out",
   },
-  cardLeft: {
+  cardIcon: {
     flexShrink: 0,
+    width: 36,
+    height: 36,
+    borderRadius: "var(--radius-sm)",
+    backgroundColor: "var(--badge-bg)",
     display: "flex",
-    alignItems: "flex-start",
-    paddingTop: 2,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  icon: {
-    fontSize: 20,
+  iconEmoji: {
+    fontSize: 16,
   },
   cardContent: {
     flex: 1,
@@ -178,32 +246,35 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 8,
   },
   cardTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 600,
     color: "var(--text-primary)",
+    lineHeight: 1.4,
   },
   time: {
     fontSize: 11,
-    color: "var(--text-secondary)",
+    color: "var(--text-tertiary)",
     flexShrink: 0,
+    whiteSpace: "nowrap" as const,
   },
   cardBody: {
-    fontSize: 13,
+    fontSize: 12,
     color: "var(--text-secondary)",
     marginTop: 4,
-    lineHeight: 1.4,
+    lineHeight: 1.5,
+    margin: 0,
   },
   typeBadge: {
-    marginTop: 6,
+    display: "inline-block",
+    marginTop: 8,
     fontSize: 10,
     fontWeight: 600,
-    color: "var(--text-secondary)",
+    color: "var(--text-tertiary)",
     backgroundColor: "var(--badge-bg)",
-    borderRadius: 4,
-    padding: "2px 6px",
-    display: "inline-block",
+    borderRadius: "var(--radius-full)",
+    padding: "2px 8px",
     textTransform: "uppercase" as const,
-    letterSpacing: "0.03em",
+    letterSpacing: "0.04em",
   },
 };
 

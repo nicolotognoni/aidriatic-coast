@@ -8,9 +8,11 @@
 }
 
 /* Font setup */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 :root {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -19,60 +21,85 @@
 
 /* Light theme (default) */
 :root {
-  --text-primary: #111;
-  --text-secondary: #666;
+  --text-primary: #0f0f1a;
+  --text-secondary: rgba(0, 0, 0, 0.55);
+  --text-tertiary: rgba(0, 0, 0, 0.35);
+  --text-muted: rgba(0, 0, 0, 0.20);
   --bg-primary: #fff;
   --bg-secondary: #fafafa;
   --bg-card: #fff;
-  --border-color: #e0e0e0;
-  --border-selected: #111;
-  --checkbox-bg: #111;
-  --badge-bg: #f0f0f0;
-  --input-border: #ddd;
-  --btn-bg: #111;
-  --loading-bg: #f0f7ff;
-  --plan-bg: #f8f8f0;
-  --plan-border: #e8e8d8;
-  --empty-color: #999;
+  --bg-hover: rgba(0, 0, 0, 0.03);
+  --bg-active: rgba(0, 0, 0, 0.05);
+  --border-color: rgba(0, 0, 0, 0.08);
+  --border-hover: rgba(0, 0, 0, 0.15);
+  --border-selected: #0f0f1a;
+  --accent: #0f0f1a;
+  --accent-soft: rgba(0, 0, 0, 0.04);
+  --accent-border: rgba(0, 0, 0, 0.12);
+  --badge-bg: rgba(0, 0, 0, 0.05);
+  --badge-text: rgba(0, 0, 0, 0.45);
+  --input-bg: rgba(0, 0, 0, 0.02);
+  --input-border: rgba(0, 0, 0, 0.10);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-focus: 0 0 0 1.5px #0f0f1a;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
 }
 
 /* Dark theme */
 [data-theme="dark"] {
-  --text-primary: #eee;
-  --text-secondary: #aaa;
-  --bg-primary: #1e1e1e;
-  --bg-secondary: #2a2a2a;
-  --bg-card: #2a2a2a;
-  --border-color: #444;
-  --border-selected: #6ea8fe;
-  --checkbox-bg: #6ea8fe;
-  --badge-bg: #333;
-  --input-border: #555;
-  --btn-bg: #6ea8fe;
-  --loading-bg: #1a2a3a;
-  --plan-bg: #2a2a20;
-  --plan-border: #444;
-  --empty-color: #777;
+  --text-primary: #f0f0f0;
+  --text-secondary: rgba(255, 255, 255, 0.60);
+  --text-tertiary: rgba(255, 255, 255, 0.35);
+  --text-muted: rgba(255, 255, 255, 0.20);
+  --bg-primary: #111;
+  --bg-secondary: #1a1a1a;
+  --bg-card: #1a1a1a;
+  --bg-hover: rgba(255, 255, 255, 0.04);
+  --bg-active: rgba(255, 255, 255, 0.08);
+  --border-color: rgba(255, 255, 255, 0.10);
+  --border-hover: rgba(255, 255, 255, 0.18);
+  --border-selected: #f0f0f0;
+  --accent: #f0f0f0;
+  --accent-soft: rgba(255, 255, 255, 0.06);
+  --accent-border: rgba(255, 255, 255, 0.15);
+  --badge-bg: rgba(255, 255, 255, 0.08);
+  --badge-text: rgba(255, 255, 255, 0.50);
+  --input-bg: rgba(255, 255, 255, 0.04);
+  --input-border: rgba(255, 255, 255, 0.12);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 12px rgba(0, 0, 0, 0.3);
+  --shadow-focus: 0 0 0 1.5px #f0f0f0;
 }
 
 /* Fallback for prefers-color-scheme when no data-theme set */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --text-primary: #eee;
-    --text-secondary: #aaa;
-    --bg-primary: #1e1e1e;
-    --bg-secondary: #2a2a2a;
-    --bg-card: #2a2a2a;
-    --border-color: #444;
-    --border-selected: #6ea8fe;
-    --checkbox-bg: #6ea8fe;
-    --badge-bg: #333;
-    --input-border: #555;
-    --btn-bg: #6ea8fe;
-    --loading-bg: #1a2a3a;
-    --plan-bg: #2a2a20;
-    --plan-border: #444;
-    --empty-color: #777;
+    --text-primary: #f0f0f0;
+    --text-secondary: rgba(255, 255, 255, 0.60);
+    --text-tertiary: rgba(255, 255, 255, 0.35);
+    --text-muted: rgba(255, 255, 255, 0.20);
+    --bg-primary: #111;
+    --bg-secondary: #1a1a1a;
+    --bg-card: #1a1a1a;
+    --bg-hover: rgba(255, 255, 255, 0.04);
+    --bg-active: rgba(255, 255, 255, 0.08);
+    --border-color: rgba(255, 255, 255, 0.10);
+    --border-hover: rgba(255, 255, 255, 0.18);
+    --border-selected: #f0f0f0;
+    --accent: #f0f0f0;
+    --accent-soft: rgba(255, 255, 255, 0.06);
+    --accent-border: rgba(255, 255, 255, 0.15);
+    --badge-bg: rgba(255, 255, 255, 0.08);
+    --badge-text: rgba(255, 255, 255, 0.50);
+    --input-bg: rgba(255, 255, 255, 0.04);
+    --input-border: rgba(255, 255, 255, 0.12);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 2px 12px rgba(0, 0, 0, 0.3);
+    --shadow-focus: 0 0 0 1.5px #f0f0f0;
   }
 }
 
@@ -80,6 +107,28 @@
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -109,7 +158,8 @@
 
 .md-content p {
   margin: 4px 0;
-  line-height: 1.5;
+  line-height: 1.6;
+  color: var(--text-secondary);
 }
 
 .md-content ul {
@@ -119,20 +169,23 @@
 
 .md-content li {
   margin: 2px 0;
-  line-height: 1.5;
+  line-height: 1.6;
+  color: var(--text-secondary);
 }
 
 .md-content strong {
   font-weight: 600;
+  color: var(--text-primary);
 }
 
 .md-content pre {
   background: var(--badge-bg);
-  border-radius: 6px;
-  padding: 10px;
+  border-radius: var(--radius-sm);
+  padding: 12px;
   overflow-x: auto;
   font-size: 12px;
   margin: 8px 0;
+  border: 1px solid var(--border-color);
 }
 
 .md-content code {
